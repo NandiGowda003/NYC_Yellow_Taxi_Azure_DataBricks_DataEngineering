@@ -64,3 +64,24 @@ BEGIN
         @TriggerType
     );
 END;
+
+CREATE OR ALTER PROCEDURE etl.usp_CompletePipelineAudit
+    @PipelineRunID VARCHAR(100),
+    @Status VARCHAR(20),
+    @RecordsRead BIGINT = NULL,
+    @RecordsWritten BIGINT = NULL,
+    @ErrorMessage NVARCHAR(4000) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE etl.PipelineAudit
+    SET
+        EndTime = SYSUTCDATETIME(),
+        Status = @Status,
+        RecordsRead = @RecordsRead,
+        RecordsWritten = @RecordsWritten,
+        ErrorMessage = @ErrorMessage
+    WHERE PipelineRunID = @PipelineRunID
+      AND Status IN ('Started', 'Running');
+END;
