@@ -31,12 +31,9 @@ jobs:
 
       - name: Validate repository structure
         run: |
-          test -d adf
-          test -d databricks
+          test -d .github/workflows
           test -d sql
-          test -d api
-          test -d tests
-          test -d docs
+          test -d sql/control
           test -f README.md
           test -f .gitignore
 
