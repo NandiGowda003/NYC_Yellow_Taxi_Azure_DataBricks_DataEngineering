@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  validate:
+    name: Validate Repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Python syntax
+        run: |
+          python -m compileall api scripts tests
+
+      - name: Validate repository structure
+        run: |
+          test -d adf
+          test -d databricks
+          test -d sql
+          test -d api
+          test -d tests
+          test -d docs
+          test -f README.md
+          test -f .gitignore
+
+      - name: Check for accidentally committed data files
+        run: |
+          if find . -type f \( \
+            -name "*.parquet" -o \
+            -name "*.csv" -o \
+            -name "*.zip" \
+          \) -not -path "./.git/*" | grep -q .; then
+            echo "ERROR: Data files detected in repository."
+            exit 1
+          fi
+
+      - name: CI completed
+        run: echo "Repository validation completed successfully."
