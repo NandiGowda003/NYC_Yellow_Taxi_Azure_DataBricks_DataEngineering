@@ -32,3 +32,35 @@ BEGIN
     WHERE PipelineName = @PipelineName
       AND DatasetName = @DatasetName;
 END;
+
+CREATE OR ALTER PROCEDURE etl.usp_StartPipelineAudit
+    @PipelineName VARCHAR(100),
+    @PipelineRunID VARCHAR(100),
+    @SourceSystem VARCHAR(50),
+    @DatasetName VARCHAR(100),
+    @TriggerType VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO etl.PipelineAudit
+    (
+        PipelineName,
+        PipelineRunID,
+        SourceSystem,
+        DatasetName,
+        StartTime,
+        Status,
+        TriggerType
+    )
+    VALUES
+    (
+        @PipelineName,
+        @PipelineRunID,
+        @SourceSystem,
+        @DatasetName,
+        SYSUTCDATETIME(),
+        'Started',
+        @TriggerType
+    );
+END;
