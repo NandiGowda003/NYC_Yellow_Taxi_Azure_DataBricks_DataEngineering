@@ -1,3 +1,4 @@
+# C / C++ build files
 # Prerequisites
 *.d
 
@@ -22,7 +23,7 @@
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
+# Shared objects
 *.dll
 *.so
 *.so.*
@@ -51,5 +52,60 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# debug information files
+# Debug information files
 *.dwo
+
+
+# ==========================================
+# NYC YELLOW TAXI PROJECT
+# ==========================================
+
+# Secrets & Credentials
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+*.key
+*.pem
+*.pfx
+*.p12
+
+# Azure / Databricks local credentials
+.azure/
+.databricks/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local data
+data/
+*.csv
+*.parquet
+*.json
+*.zip
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
