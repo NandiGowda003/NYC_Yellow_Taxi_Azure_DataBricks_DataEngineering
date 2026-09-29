@@ -19,9 +19,20 @@ CREATE TABLE etl.Watermark
         UNIQUE (PipelineName, DatasetName)
 );
 
+## CreateIndex
 CREATE INDEX IX_Watermark_PipelineDataset
 ON etl.Watermark
 (
     PipelineName,
     DatasetName
 );
+
+## WatermarkValidation
+SELECT
+    COLUMN_NAME,
+    DATA_TYPE,
+    IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'etl'
+  AND TABLE_NAME = 'Watermark'
+ORDER BY ORDINAL_POSITION;
