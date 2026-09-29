@@ -51,6 +51,7 @@ CREATE TABLE etl.IngestionControl
         ))
 );
 
+## CreateIndexTable
 CREATE INDEX IX_IngestionControl_Status_Period
 ON etl.IngestionControl
 (
@@ -58,3 +59,13 @@ ON etl.IngestionControl
     [Year],
     [Month]
 );
+
+## IndexSchemaValidation
+SELECT
+    COLUMN_NAME,
+    DATA_TYPE,
+    IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'etl'
+  AND TABLE_NAME = 'IngestionControl'
+ORDER BY ORDINAL_POSITION;
