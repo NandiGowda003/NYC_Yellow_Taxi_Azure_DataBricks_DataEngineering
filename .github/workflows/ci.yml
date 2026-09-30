@@ -34,6 +34,7 @@ jobs:
           test -d .github/workflows
           test -d sql
           test -d sql/control
+          test -d databricks
           test -f README.md
           test -f .gitignore
 
