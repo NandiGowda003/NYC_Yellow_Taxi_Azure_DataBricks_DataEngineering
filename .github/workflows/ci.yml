@@ -53,6 +53,7 @@ jobs:
           check_dir "databricks"
           check_dir "sql"
           check_dir "sql/control"
+          check_dir "adf"
 
           check_file "README.md"
           check_file ".gitignore"
