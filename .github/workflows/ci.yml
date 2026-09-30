@@ -27,15 +27,17 @@ jobs:
 
       - name: Validate Python syntax
         run: |
-          python -m compileall api scripts tests
+          python -m compileall -q api scripts tests databricks
 
       - name: Validate repository structure
         run: |
           test -d .github/workflows
+          test -d databricks
           test -d sql
           test -d sql/control
           test -f README.md
           test -f .gitignore
+          test -f .github/workflows/ci.yml
 
       - name: Check for accidentally committed data files
         run: |
@@ -45,6 +47,17 @@ jobs:
             -name "*.zip" \
           \) -not -path "./.git/*" | grep -q .; then
             echo "ERROR: Data files detected in repository."
+            exit 1
+          fi
+
+      - name: Check for possible secrets
+        run: |
+          if grep -RniE \
+            --exclude-dir=.git \
+            --exclude="ci.yml" \
+            "(AccountKey=|DefaultEndpointsProtocol=|SharedAccessSignature=|client_secret|password=)" \
+            .; then
+            echo "ERROR: Possible credentials or secrets detected."
             exit 1
           fi
 
