@@ -31,13 +31,32 @@ jobs:
 
       - name: Validate repository structure
         run: |
-          test -d .github/workflows
-          test -d databricks
-          test -d sql
-          test -d sql/control
-          test -f README.md
-          test -f .gitignore
-          test -f .github/workflows/ci.yml
+          check_dir() {
+            if [ -d "$1" ]; then
+              echo "PASS: directory exists -> $1"
+            else
+              echo "FAIL: directory missing -> $1"
+              exit 1
+            fi
+          }
+
+          check_file() {
+            if [ -f "$1" ]; then
+              echo "PASS: file exists -> $1"
+            else
+              echo "FAIL: file missing -> $1"
+              exit 1
+            fi
+          }
+
+          check_dir ".github/workflows"
+          check_dir "databricks"
+          check_dir "sql"
+          check_dir "sql/control"
+
+          check_file "README.md"
+          check_file ".gitignore"
+          check_file ".github/workflows/ci.yml"
 
       - name: Check for accidentally committed data files
         run: |
@@ -50,6 +69,8 @@ jobs:
             exit 1
           fi
 
+          echo "PASS: No accidental data files detected."
+
       - name: Check for possible secrets
         run: |
           if grep -RniE \
@@ -61,5 +82,8 @@ jobs:
             exit 1
           fi
 
+          echo "PASS: No obvious secrets detected."
+
       - name: CI completed
-        run: echo "Repository validation completed successfully."
+        run: |
+          echo "Repository validation completed successfully."
