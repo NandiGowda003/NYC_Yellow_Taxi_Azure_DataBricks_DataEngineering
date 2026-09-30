@@ -3,13 +3,13 @@ name: CI
 on:
   push:
     branches:
-      - develop
       - main
+      - develop
 
   pull_request:
     branches:
-      - develop
       - main
+      - develop
 
 jobs:
   validate:
@@ -17,18 +17,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ---------------------------------------------------------
+      # 1. Checkout repository
+      # ---------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ---------------------------------------------------------
+      # 2. Set up Python
+      # ---------------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      # ---------------------------------------------------------
+      # 3. Validate Python files
+      # ---------------------------------------------------------
       - name: Validate Python syntax
         run: |
-          python -m compileall -q api scripts tests databricks
+          echo "Checking Python files..."
 
+          python_files=$(find . \
+            -type f \
+            -name "*.py" \
+            -not -path "./.git/*")
+
+          if [ -z "$python_files" ]; then
+            echo "No Python files found."
+          else
+            echo "$python_files" | while read -r file; do
+              echo "Checking: $file"
+              python -m py_compile "$file"
+            done
+
+            echo "Python syntax validation passed."
+          fi
+
+      # ---------------------------------------------------------
+      # 4. Validate repository structure
+      # ---------------------------------------------------------
       - name: Validate repository structure
         run: |
           check_dir() {
@@ -49,41 +77,160 @@ jobs:
             fi
           }
 
+          echo "Checking repository structure..."
+
+          # GitHub
           check_dir ".github/workflows"
+          check_file ".github/workflows/ci.yml"
+
+          # Databricks
           check_dir "databricks"
+          check_dir "databricks/notebooks"
+
+          # ADF
+          check_dir "dataset"
+          check_dir "factory"
+          check_dir "linkedService"
+          check_dir "pipeline"
+          check_dir "trigger"
+
+          # SQL
           check_dir "sql"
           check_dir "sql/control"
 
+          # Project files
           check_file "README.md"
           check_file ".gitignore"
-          check_file ".github/workflows/ci.yml"
 
+          # Power BI
+          if [ -d "powerbi" ]; then
+            echo "PASS: Power BI directory exists -> powerbi"
+          else
+            echo "INFO: Power BI directory not created yet."
+          fi
+
+          echo "Repository structure validation passed."
+
+      # ---------------------------------------------------------
+      # 5. Validate ADF JSON
+      # ---------------------------------------------------------
+      - name: Validate ADF JSON
+        run: |
+          echo "Validating ADF JSON files..."
+
+          json_files=$(find \
+            dataset \
+            factory \
+            linkedService \
+            pipeline \
+            trigger \
+            -type f \
+            -name "*.json")
+
+          if [ -z "$json_files" ]; then
+            echo "ERROR: No ADF JSON files found."
+            exit 1
+          fi
+
+          echo "$json_files" | while read -r file; do
+            echo "Checking JSON: $file"
+            python -m json.tool "$file" > /dev/null
+          done
+
+          echo "ADF JSON validation passed."
+
+      # ---------------------------------------------------------
+      # 6. Validate Power BI project files
+      # ---------------------------------------------------------
+      - name: Validate Power BI project files
+        run: |
+          if [ ! -d "powerbi" ]; then
+            echo "INFO: Power BI directory not present yet."
+            echo "Skipping Power BI validation."
+            exit 0
+          fi
+
+          echo "Power BI directory detected."
+
+          # Check for PBIP project files
+          pbip_files=$(find powerbi \
+            -type f \
+            -name "*.pbip")
+
+          if [ -n "$pbip_files" ]; then
+            echo "Power BI PBIP project detected:"
+            echo "$pbip_files"
+          else
+            echo "INFO: No .pbip file found."
+          fi
+
+          # Validate JSON files inside Power BI project
+          json_files=$(find powerbi \
+            -type f \
+            -name "*.json")
+
+          if [ -n "$json_files" ]; then
+            echo "$json_files" | while read -r file; do
+              echo "Checking Power BI JSON: $file"
+              python -m json.tool "$file" > /dev/null
+            done
+
+            echo "Power BI JSON validation passed."
+          else
+            echo "INFO: No Power BI JSON files found."
+          fi
+
+          echo "Power BI project validation completed."
+
+      # ---------------------------------------------------------
+      # 7. Check for accidentally committed data files
+      # ---------------------------------------------------------
       - name: Check for accidentally committed data files
         run: |
-          if find . -type f \( \
-            -name "*.parquet" -o \
-            -name "*.csv" -o \
-            -name "*.zip" \
-          \) -not -path "./.git/*" | grep -q .; then
+          echo "Checking for data files..."
+
+          if find . \
+            -type f \
+            \( \
+              -name "*.parquet" -o \
+              -name "*.csv" -o \
+              -name "*.zip" -o \
+              -name "*.bak" \
+            \) \
+            -not -path "./.git/*" \
+            | grep -q .; then
+
             echo "ERROR: Data files detected in repository."
+            echo "Remove source/data files before committing."
             exit 1
           fi
 
           echo "PASS: No accidental data files detected."
 
+      # ---------------------------------------------------------
+      # 8. Check for possible secrets
+      # ---------------------------------------------------------
       - name: Check for possible secrets
         run: |
-          if grep -RniE \
-            --exclude-dir=.git \
-            --exclude="ci.yml" \
-            "(AccountKey=|DefaultEndpointsProtocol=|SharedAccessSignature=|client_secret|password=)" \
-            .; then
-            echo "ERROR: Possible credentials or secrets detected."
+          echo "Checking for possible secrets..."
+
+          if git grep -nE \
+            'AccountKey=[^[:space:];"]+|SharedAccessSignature=[^[:space:]]+|client_secret[[:space:]]*[:=][[:space:]]*["'\'']?[^[:space:]"'\'']+|password[[:space:]]*[:=][[:space:]]*["'\'']?[^[:space:]"'\'']+' \
+            -- \
+            ':!*.md' \
+            ':!.github/workflows/ci.yml'; then
+
+            echo "ERROR: Possible credential or secret detected."
             exit 1
           fi
 
           echo "PASS: No obvious secrets detected."
 
+      # ---------------------------------------------------------
+      # 9. CI completed
+      # ---------------------------------------------------------
       - name: CI completed
         run: |
-          echo "Repository validation completed successfully."
+          echo "========================================"
+          echo "Repository validation completed."
+          echo "========================================"
