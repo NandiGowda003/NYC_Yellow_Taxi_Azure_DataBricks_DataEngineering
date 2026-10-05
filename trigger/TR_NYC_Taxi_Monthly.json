@@ -2,7 +2,7 @@
 	"name": "TR_NYC_Taxi_Monthly",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Started",
+		"runtimeState": "Stopped",
 		"pipelines": [
 			{
 				"pipelineReference": {
