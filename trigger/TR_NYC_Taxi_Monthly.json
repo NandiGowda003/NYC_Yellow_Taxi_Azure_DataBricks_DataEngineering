@@ -2,7 +2,7 @@
 	"name": "TR_NYC_Taxi_Monthly",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
@@ -17,6 +17,7 @@
 				"frequency": "Month",
 				"interval": 1,
 				"startTime": "2026-09-28T17:37:00",
+				"endTime": "2026-10-20T05:41:00",
 				"timeZone": "India Standard Time",
 				"schedule": {
 					"minutes": [
